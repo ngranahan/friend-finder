@@ -184,15 +184,15 @@
   </div>
 
   <script type="text/javascript">
+
     $("#submit").on("click", function(e) {
         e.preventDefault();
         console.log("button clicked");
         
-        var newScore = 0;
         var newFriend = {
             name: $("#name").val().trim(),
             photo: $("#photo").val().trim(),
-            score: [
+            scores: [
                 parseInt($("#q1").val()),
                 parseInt($("#q2").val()),
                 parseInt($("#q3").val()),
@@ -205,25 +205,59 @@
                 parseInt($("#q10").val()),
             ]
         };
-        
-        for (var i = 0; i < newFriend.score.length; i++) {
-            newScore += newFriend.score[i];
-        }
 
-        console.log(newFriend);
-        console.log(newScore);
-        
+        // The match function runs before the new user data is posted to the api
+        matchFriend(newFriend);
 
-        $.post("/api/friends", newFriend, function(data) {
-            if (data) {
-                alert("Yay!");
-            } else {
-                alert("Please fill out all fields");
-            }
+        $.post("/api/friends", newFriend).then(function(data) {
+            console.log("new friend data: " + data);
         });
 
-
+        
     });
+
+    function matchFriend(newFriend) {
+       var currentURL = window.location.origin;
+
+       $.ajax({ url: currentURL + "/api/friends", method: "GET"}).then(function(friendData) {
+
+        // Just displaying basic info for testing
+         console.log("URL: " + currentURL + "/api/friends");
+         console.log(friendData);
+         console.log("newFriend: " + JSON.stringify(newFriend));
+        
+        // Loop through array of friend data find the difference between stored answers and current user's answers
+        var differences = [];
+
+        for (var i = 0; i < friendData.length; i++) {
+          console.log(friendData[i].scores);
+          var q1 = Math.abs(friendData[i].scores[0] - newFriend.scores[0]);
+          var q2 = Math.abs(friendData[i].scores[1] - newFriend.scores[1]);
+          var q3 = Math.abs(friendData[i].scores[2] - newFriend.scores[2]);
+          var q4 = Math.abs(friendData[i].scores[3] - newFriend.scores[3]);
+          var q5 = Math.abs(friendData[i].scores[4] - newFriend.scores[4]);
+          var q6 = Math.abs(friendData[i].scores[5] - newFriend.scores[5]);
+          var q7 = Math.abs(friendData[i].scores[6] - newFriend.scores[6]);
+          var q8 = Math.abs(friendData[i].scores[7] - newFriend.scores[7]);
+          var q9 = Math.abs(friendData[i].scores[8] - newFriend.scores[8]);
+          var q10 = Math.abs(friendData[i].scores[9] - newFriend.scores[9]);
+          var totalDiff = q1 + q2 + q3 + q4 + q6 + q7 + q8 + q9 + q10;
+          console.log("total difference: " + totalDiff);
+          differences.push(totalDiff);
+        }
+
+        console.log("Differences Array: " + differences);
+        // Find the smallest difference
+        var smallestDiff = Math.min(...differences);
+        var matchIndex = differences.indexOf(smallestDiff);
+        console.log("Friend Match: " + JSON.stringify(friendData[matchIndex]));
+
+       });
+
+
+    }
+
+    
 
   </script>
 
